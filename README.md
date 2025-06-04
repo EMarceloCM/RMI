@@ -1,19 +1,95 @@
-1. Compilar os arquivos nas máquinas de estação: `javac IStation.java Station.java StationServer.java ControlClient.java`
-2. Como executar em cada máquina de estação:
-    java StationServer <IP_LOCAL> <ID_DA_ESTACAO>
-    java StationServer 192.168.0.101 1 -> máquina da estação 1
-    java StationServer 192.168.0.102 2 -> máquina da estação 2
-    java StationServer 192.168.0.103 3 -> máquina da estação 3 
-    Cada instância criará um registro RMI na porta 1099 e fará bind com o nome Station1, Station2 ou Station3, respectivamente.
-3. Como executar na estação de controle:
-    java ControlClient <IP1> <IP2> <IP3>
-    java ControlClient 192.168.0.101 192.168.0.102 192.168.0.103
-    O cliente irá exibir um menu no console.
-    O operador escolhe qual estação ativar (1, 2 ou 3), depois escolhe a ação (“tocar canto de pássaro”, “alterar padrão do gerador de sons”, “pausar áudio” ou “retomar áudio”).
-    Ao selecionar “tocar canto de pássaro”, o cliente solicita o ID do canto (um inteiro), que é repassado para o servidor.
-    Ao selecionar “alterar padrão do gerador de sons”, o cliente solicita uma String e envia ao método remoto.
+# ControlClient & StationServer RMI
 
-Pré-requisitos:
-- Java JDK
-- Porta 1099 liberada no firewall da máquina das estações
-- Executar os programas na mesma rede local (sem NAT ou Wi-Fi isolado)
+Este projeto permite controlar remotamente até três estações de áudio via RMI. O operador pode executar ações como tocar canto de pássaro, alterar o padrão de som, pausar e retomar o áudio em cada estação registrada.
+
+---
+
+## 1. Pré-requisitos
+
+- **Java JDK** instalado em todas as máquinas (estações e estação de controle).  
+- **Porta 1099** liberada no firewall de cada máquina de estação (RMI Registry padrão).  
+- Todas as máquinas devem estar na **mesma rede local** (sem NAT ou Wi-Fi isolado).
+
+---
+
+## 2. Estrutura dos Arquivos
+
+- **IStation.java**  
+  Interface RMI que declara os métodos remotos:
+  - `playBirdSong(int songId)`
+  - `changeSoundPattern(String pattern)`
+  - `pauseAudio()`
+  - `resumeAudio()`
+
+- **Station.java**  
+  Implementa `IStation` e contém a lógica de cada método (por exemplo, tocar áudio, trocar padrão).
+
+- **StationServer.java**  
+  Classe principal de cada estação. Registra o stub RMI no registro local (porta 1099) e faz bind com o nome `Station<ID>`.
+
+- **ControlClient.java**  
+  Cliente RMI responsável por conectar-se a até três estações e exibir menu de operações no console.
+
+---
+
+## 3. Compilação
+
+Em cada máquina (estações 1, 2 e 3, e estação de controle), navegue até a pasta que contém os quatro arquivos `.java` e execute:
+
+$$$
+javac IStation.java Station.java StationServer.java ControlClient.java
+$$$
+
+---
+
+## 4. Execução das Máquinas de Estação
+
+Cada instância de estação criará um registro RMI na porta 1099 e fará bind com o nome `Station<ID>`:
+
+- Para a **Estação 1** (ex.: IP 192.168.0.101 e ID 1):
+  $$
+  java StationServer 192.168.0.101 1
+  $$
+- Para a **Estação 2** (ex.: IP 192.168.0.102 e ID 2):
+  $$
+  java StationServer 192.168.0.102 2
+  $$
+- Para a **Estação 3** (ex.: IP 192.168.0.103 e ID 3):
+  $$
+  java StationServer 192.168.0.103 3
+  $$
+
+Cada servidor ficará aguardando chamadas RMI no nome `Station1`, `Station2` ou `Station3`, conforme o ID informado.
+
+---
+
+## 5. Execução da Estação de Controle
+
+No host da estação de controle, execute o cliente passando até três IPs das estações (mínimo 1, máximo 3):
+
+$$$
+java ControlClient <IP1> [<IP2>] [<IP3>]
+$$$
+
+Exemplo com três estações:
+$$$
+java ControlClient 192.168.0.101 192.168.0.102 192.168.0.103
+$$$
+
+O cliente exibirá um menu:
+1. Escolher a estação (1, 2 ou 3).  
+2. Selecionar a ação:
+   - **Tocar canto de pássaro** (o cliente pedirá um ID inteiro).  
+   - **Alterar padrão do gerador de sons** (o cliente pedirá uma string).  
+   - **Pausar áudio**.  
+   - **Retomar áudio**.  
+3. Para trocar de estação ou sair, basta escolher 0 no menu principal.
+
+---
+
+## 6. Observações
+
+- As máquinas de estação devem usar o mesmo **ID** no `StationServer` que corresponderá ao nome RMI (`Station1`, `Station2` ou `Station3`).  
+- Verifique se o **firewall** de cada estação permite comunicações na porta 1099 (TCP).  
+- Caso precise de apenas 1 ou 2 estações, basta omitir os parâmetros adicionais ao executar o cliente.  
+- Se uma estação não estiver disponível, o cliente exibirá exceção ao tentar o `Naming.lookup`.
