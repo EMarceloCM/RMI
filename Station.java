@@ -5,7 +5,7 @@ import java.rmi.server.UnicastRemoteObject;
 import javax.sound.sampled.*;
 
 
-public class Station extends UnicastRemoteObject implements StationInterface {
+public class Station extends UnicastRemoteObject implements IStation {
     private final String stationName;
     private volatile boolean tonePlaying = false;
     private Clip currentClip = null;
@@ -41,11 +41,13 @@ public class Station extends UnicastRemoteObject implements StationInterface {
             clip.start();
 
             clip.addLineListener(event -> {
-                if (event.getType() == LineEvent.Type.STOP && !clip.isRunning()) {
-                    clip.close();
-                    currentClip = null;
-                    pauseFramePosition = 0;
-                    System.out.println("[" + stationName + "] Reprodução encerrada.");
+                if (event.getType() == LineEvent.Type.STOP) {
+                    if (clip.getFramePosition() >= clip.getFrameLength()) {
+                        clip.close();
+                        currentClip = null;
+                        pauseFramePosition = 0;
+                        System.out.println("[" + stationName + "] Reprodução encerrada.");
+                    }
                 }
             });
 
