@@ -9,7 +9,7 @@
     java ControlClient <IP1> <IP2> <IP3>
     java ControlClient 192.168.0.101 192.168.0.102 192.168.0.103
     O cliente irá exibir um menu no console.
-    O operador escolhe qual estação ativar (1, 2 ou 3), depois escolhe a ação (“tocar canto de pássaro” ou “alterar padrão do gerador de sons”).
+    O operador escolhe qual estação ativar (1, 2 ou 3), depois escolhe a ação (“tocar canto de pássaro”, “alterar padrão do gerador de sons”, “pausar áudio” ou “retomar áudio”).
     Ao selecionar “tocar canto de pássaro”, o cliente solicita o ID do canto (um inteiro), que é repassado para o servidor.
     Ao selecionar “alterar padrão do gerador de sons”, o cliente solicita uma String e envia ao método remoto.
 
