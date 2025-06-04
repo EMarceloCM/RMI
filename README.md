@@ -14,7 +14,7 @@ Este projeto permite controlar remotamente até três estações de áudio via R
 
 ## 2. Estrutura dos Arquivos
 
-```
+```bash
 ├── IStation.java
 ├── Station.java
 ├── StationServer.java
@@ -27,7 +27,7 @@ Este projeto permite controlar remotamente até três estações de áudio via R
 
 Em cada máquina (estações 1, 2 e 3, e estação de controle), navegue até a pasta que contém os quatro arquivos `.java` e execute:
 
-```
+```bash
 javac IStation.java Station.java StationServer.java ControlClient.java
 ```
 
@@ -58,14 +58,14 @@ Cada servidor ficará aguardando chamadas RMI no nome `Station1`, `Station2` ou 
 
 No host da estação de controle, execute o cliente passando até três IPs das estações (mínimo 1, máximo 3):
 
-$$$
+```bash
 java ControlClient <IP1> [<IP2>] [<IP3>]
-$$$
+```
 
 Exemplo com três estações:
-$$$
+```bash
 java ControlClient 192.168.0.101 192.168.0.102 192.168.0.103
-$$$
+```
 
 O cliente exibirá um menu:
 1. Escolher a estação (1, 2 ou 3).  
