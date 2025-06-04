@@ -48,8 +48,11 @@ public class ControlClient {
                 }
 
                 System.out.println("\n---- Ações Disponíveis em " + nomeEstacao + " ----");
-                System.out.println("1) Tocar canto de pássaro");
-                System.out.println("2) Alterar padrão do gerador de sons");
+                System.out.println("1. Tocar canto de pássaro");
+                System.out.println("2. Alterar padrão de som");
+                System.out.println("3. Pausar áudio");
+                System.out.println("4. Retomar áudio");
+                System.out.println("0. Trocar estação / Sair");
                 System.out.print("\nEscolha uma ação: ");
                 int escolhaAcao = scanner.nextInt();
                 scanner.nextLine(); // consumir newline
@@ -62,6 +65,12 @@ public class ControlClient {
                     System.out.print("Informe o novo padrão de som (string): ");
                     String pattern = scanner.nextLine();
                     estacaoSelecionada.changeSoundPattern(pattern);
+                } else if (escolhaAcao == 3) {
+                    estacaoSelecionada.pauseAudio();
+                } else if (escolhaAcao == 4) {
+                    estacaoSelecionada.resumeAudio();
+                } else if (escolhaAcao == 0) {
+                    break;
                 } else {
                     System.out.println("Ação inválida. Retornando ao menu principal.");
                 }

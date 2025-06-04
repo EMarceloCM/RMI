@@ -7,7 +7,9 @@ import javax.sound.sampled.*;
 
 public class Station extends UnicastRemoteObject implements StationInterface {
     private final String stationName;
-    private volatile boolean tonePlaying = false; // controla o thread gerador de tom
+    private volatile boolean tonePlaying = false;
+    private Clip currentClip = null;
+    private int pauseFramePosition = 0;
 
     public Station(String stationName) throws RemoteException {
         super();
@@ -15,108 +17,117 @@ public class Station extends UnicastRemoteObject implements StationInterface {
     }
 
     @Override
-    public void playBirdSong(int songId) throws RemoteException {
-        System.out.println("[" + stationName + "] solicitada reprodução de canto de pássaro com ID: " + songId);
+    public synchronized void playBirdSong(int songId) throws RemoteException {
+        stopCurrentClipIfPlaying();
+
+        System.out.println("[" + stationName + "] Tocando canto de pássaro ID: " + songId);
         String caminho = "audios" + File.separator + "bird" + songId + ".wav";
         File arquivo = new File(caminho);
 
         if (!arquivo.exists()) {
-            System.err.println("[" + stationName + "] Arquivo não encontrado: " + caminho);
+            System.err.println("Arquivo não encontrado: " + caminho);
             return;
         }
 
         try (AudioInputStream audioIn = AudioSystem.getAudioInputStream(arquivo)) {
             AudioFormat format = audioIn.getFormat();
             DataLine.Info info = new DataLine.Info(Clip.class, format);
+
             Clip clip = (Clip) AudioSystem.getLine(info);
             clip.open(audioIn);
+            currentClip = clip;
+            pauseFramePosition = 0;
+
             clip.start();
 
-            System.out.println("[" + stationName + "] tocando arquivo: " + arquivo.getName());
-
             clip.addLineListener(event -> {
-                if (event.getType() == LineEvent.Type.STOP) {
+                if (event.getType() == LineEvent.Type.STOP && !clip.isRunning()) {
                     clip.close();
-                    System.out.println("[" + stationName + "] reprodução encerrada: " + arquivo.getName());
+                    currentClip = null;
+                    pauseFramePosition = 0;
+                    System.out.println("[" + stationName + "] Reprodução encerrada.");
                 }
             });
+
         } catch (UnsupportedAudioFileException | LineUnavailableException | IOException ex) {
-            System.err.println("[" + stationName + "] Erro ao tocar áudio: " + ex.getMessage());
-            ex.printStackTrace();
+            System.err.println("Erro ao tocar áudio: " + ex.getMessage());
+        }
+    }
+
+    @Override
+    public synchronized void pauseAudio() throws RemoteException {
+        if (currentClip != null && currentClip.isRunning()) {
+            pauseFramePosition = currentClip.getFramePosition();
+            currentClip.stop();
+            System.out.println("[" + stationName + "] Áudio pausado.");
+        } else {
+            System.out.println("[" + stationName + "] Nenhum áudio ativo para pausar.");
+        }
+    }
+
+    @Override
+    public synchronized void resumeAudio() throws RemoteException {
+        if (currentClip != null && !currentClip.isRunning()) {
+            currentClip.setFramePosition(pauseFramePosition);
+            currentClip.start();
+            System.out.println("[" + stationName + "] Áudio retomado.");
+        } else {
+            System.out.println("[" + stationName + "] Nenhum áudio pausado para retomar.");
         }
     }
 
     @Override
     public void changeSoundPattern(String pattern) throws RemoteException {
-        System.out.println("[" + stationName + "] alterando padrão de som para: \"" + pattern + "\"");
-
         tonePlaying = false;
-
         if (pattern == null || pattern.trim().isEmpty()) {
-            System.out.println("[" + stationName + "] padrão vazio recebido: parando qualquer tom.");
+            System.out.println("[" + stationName + "] Padrão vazio recebido.");
             return;
         }
 
-        // Cria e inicia um thread para gerar um tom contínuo (senoidal), frequência derivada do 'pattern'
         Thread toneThread = new Thread(() -> {
             tonePlaying = true;
             try {
-                // Converte o texto do pattern em frequência (exemplo simples)
-                // Por exemplo, soma de códigos dos caracteres modulado em um intervalo audible (200Hz..1000Hz)
                 int sum = 0;
                 for (char c : pattern.toCharArray()) sum += c;
-                float frequency = 200 + (sum % 801); // entre 200Hz e 1000Hz
-
-                int durationSec = 10;
+                float frequency = 200 + (sum % 801);
                 float sampleRate = 44100;
-                int numSamples = (int) (durationSec * sampleRate);
+                int numSamples = (int) (10 * sampleRate);
                 byte[] buffer = new byte[2 * numSamples];
 
-                // Preenche o buffer com onda senoidal
                 for (int i = 0; i < numSamples; i++) {
                     double angle = 2.0 * Math.PI * i * frequency / sampleRate;
-                    short valor = (short) (Math.sin(angle) * Short.MAX_VALUE);
-                    // valor baixo (LSB)
-                    buffer[2 * i]     = (byte) (valor & 0xff);
-                    // valor alto (MSB)
-                    buffer[2 * i + 1] = (byte) ((valor >> 8) & 0xff);
+                    short value = (short) (Math.sin(angle) * Short.MAX_VALUE);
+                    buffer[2 * i] = (byte) (value & 0xff);
+                    buffer[2 * i + 1] = (byte) ((value >> 8) & 0xff);
                 }
 
-                // Define formato de áudio PCM 16 bits, mono, 44.1kHz
-                AudioFormat format = new AudioFormat(
-                    sampleRate,
-                    16,
-                    1,
-                    true,
-                    false
-                );
+                AudioFormat format = new AudioFormat(sampleRate, 16, 1, true, false);
                 try (SourceDataLine line = AudioSystem.getSourceDataLine(format)) {
                     line.open(format);
                     line.start();
-
-                    System.out.println("[" + stationName + "] tocando tom de frequência " 
-                            + String.format("%.1fHz", frequency));
-
-                    int bloco = 4096;
-                    for (int offset = 0; offset < buffer.length; offset += bloco) {
-                        if (!tonePlaying) {
-                            break;
-                        }
-                        int bytesParaEscrever = Math.min(bloco, buffer.length - offset);
-                        line.write(buffer, offset, bytesParaEscrever);
+                    for (int i = 0; i < buffer.length && tonePlaying; i += 4096) {
+                        int len = Math.min(4096, buffer.length - i);
+                        line.write(buffer, i, len);
                     }
-
                     line.drain();
                     line.stop();
                     line.close();
-                    System.out.println("[" + stationName + "] tom interrompido/encerrado.");
                 }
-            } catch (LineUnavailableException ex) {
-                System.err.println("[" + stationName + "] Erro ao gerar tom: " + ex.getMessage());
-                ex.printStackTrace();
+
+            } catch (LineUnavailableException e) {
+                e.printStackTrace();
             }
         });
 
         toneThread.start();
+    }
+
+    private void stopCurrentClipIfPlaying() {
+        if (currentClip != null && currentClip.isOpen()) {
+            currentClip.stop();
+            currentClip.close();
+            currentClip = null;
+            pauseFramePosition = 0;
+        }
     }
 }
