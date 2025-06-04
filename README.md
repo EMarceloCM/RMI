@@ -14,21 +14,12 @@ Este projeto permite controlar remotamente até três estações de áudio via R
 
 ## 2. Estrutura dos Arquivos
 
-- **IStation.java**  
-  Interface RMI que declara os métodos remotos:
-  - `playBirdSong(int songId)`
-  - `changeSoundPattern(String pattern)`
-  - `pauseAudio()`
-  - `resumeAudio()`
-
-- **Station.java**  
-  Implementa `IStation` e contém a lógica de cada método (por exemplo, tocar áudio, trocar padrão).
-
-- **StationServer.java**  
-  Classe principal de cada estação. Registra o stub RMI no registro local (porta 1099) e faz bind com o nome `Station<ID>`.
-
-- **ControlClient.java**  
-  Cliente RMI responsável por conectar-se a até três estações e exibir menu de operações no console.
+```
+├── IStation.java
+├── Station.java
+├── StationServer.java
+└── ControlClient.java
+```
 
 ---
 
@@ -36,9 +27,9 @@ Este projeto permite controlar remotamente até três estações de áudio via R
 
 Em cada máquina (estações 1, 2 e 3, e estação de controle), navegue até a pasta que contém os quatro arquivos `.java` e execute:
 
-$$$
+```
 javac IStation.java Station.java StationServer.java ControlClient.java
-$$$
+```
 
 ---
 
@@ -47,17 +38,17 @@ $$$
 Cada instância de estação criará um registro RMI na porta 1099 e fará bind com o nome `Station<ID>`:
 
 - Para a **Estação 1** (ex.: IP 192.168.0.101 e ID 1):
-  $$
+  ```bash
   java StationServer 192.168.0.101 1
-  $$
+  ```
 - Para a **Estação 2** (ex.: IP 192.168.0.102 e ID 2):
-  $$
+  ```bash
   java StationServer 192.168.0.102 2
-  $$
+  ```
 - Para a **Estação 3** (ex.: IP 192.168.0.103 e ID 3):
-  $$
+  ```bash
   java StationServer 192.168.0.103 3
-  $$
+  ```
 
 Cada servidor ficará aguardando chamadas RMI no nome `Station1`, `Station2` ou `Station3`, conforme o ID informado.
 
