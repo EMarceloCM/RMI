@@ -1,4 +1,4 @@
-1. Compilar os arquivos nas máquinas de estação: javac IStation.java Station.java StationServer.java
+1. Compilar os arquivos nas máquinas de estação: `javac IStation.java Station.java StationServer.java ControlClient.java`
 2. Como executar em cada máquina de estação:
     java StationServer <IP_LOCAL> <ID_DA_ESTACAO>
     java StationServer 192.168.0.101 1 -> máquina da estação 1
