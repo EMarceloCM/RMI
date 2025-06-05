@@ -9,43 +9,42 @@ public class ControlClient {
         }
 
         try {
-            int nStations = args.length;
-            IStation[] stubs = new IStation[nStations];
-            String[] hostnames = new String[nStations];
+            int numStations = args.length;
+            IStation[] stubs = new IStation[numStations];
+            String[] hostnames = new String[numStations];
 
-            for (int i = 0; i < nStations; i++) {
+            for (int i = 0; i < numStations; i++) {
                 hostnames[i] = args[i];
-                String stationName = "Station" + (i + 1);
-                stubs[i] = (IStation) Naming.lookup("rmi://" + hostnames[i] + "/" + stationName);
+                String stationName = "Station " + (i + 1);
+                stubs[i] = (IStation) Naming.lookup("rmi://" + hostnames[i] + "/" + stationName); // registra o objeto remoto station no registro RMI e retorna sua referência
             }
-
 
             Scanner scanner = new Scanner(System.in);
             while (true) {
                 System.out.println("\n---- Estações Disponíveis ----");
-                for (int i=0; i < nStations; i++) {
-                    System.out.printf("%d. %s (%s)%n", i + 1, "Station" + (i + 1), hostnames[i]);
+                for (int i=0; i < numStations; i++) {
+                    System.out.printf("%d. %s (%s)%n", i + 1, "Station " + (i + 1), hostnames[i]);
                 }
                 System.out.println("0. Sair");
 
                 System.out.print("\nEscolha uma estação: ");
-                int escolhaEstacao = scanner.nextInt();
+                int chosenStation = scanner.nextInt();
                 scanner.nextLine();
 
-                if (escolhaEstacao == 0) {
+                if (chosenStation == 0) {
                     System.out.println("Encerrando estação de controle.");
                     break;
                 }
-                if (escolhaEstacao < 1 || escolhaEstacao > nStations) {
+                if (chosenStation < 1 || chosenStation > numStations) {
                     System.out.println("Estação inexistente, tente novamente.");
                     continue;
                 }
 
-                IStation estacaoSelecionada = stubs[escolhaEstacao-1];
-                String nomeEstacao = "Station" + escolhaEstacao;
+                IStation selectedStation = stubs[chosenStation-1];
+                String stationName = "Station " + chosenStation;
 
                 while (true) {
-                    System.out.println("\n---- Ações Disponíveis em " + nomeEstacao + " ----");
+                    System.out.println("\n---- Ações Disponíveis em " + stationName + " ----");
                     System.out.println("1. Tocar canto de pássaro");
                     System.out.println("2. Alterar padrão de som");
                     System.out.println("3. Pausar áudio");
@@ -53,23 +52,23 @@ public class ControlClient {
                     System.out.println("0. Trocar estação / Sair");
                     System.out.print("\nEscolha uma ação: ");
 
-                    int escolhaAcao = scanner.nextInt();
+                    int chosenAction = scanner.nextInt();
                     scanner.nextLine();
 
-                    if (escolhaAcao == 1) {
+                    if (chosenAction == 1) {
                         System.out.print("Informe o ID do canto (ex: 1, 2 ou 3): ");
                         int songId = scanner.nextInt();
                         scanner.nextLine();
-                        estacaoSelecionada.playBirdSong(songId);
-                    } else if (escolhaAcao == 2) {
+                        selectedStation.playBirdSong(songId);
+                    } else if (chosenAction == 2) {
                         System.out.print("Informe o novo padrão de som (string): ");
                         String pattern = scanner.nextLine();
-                        estacaoSelecionada.changeSoundPattern(pattern);
-                    } else if (escolhaAcao == 3) {
-                        estacaoSelecionada.pauseAudio();
-                    } else if (escolhaAcao == 4) {
-                        estacaoSelecionada.resumeAudio();
-                    } else if (escolhaAcao == 0) {
+                        selectedStation.changeSoundPattern(pattern);
+                    } else if (chosenAction == 3) {
+                        selectedStation.pauseAudio();
+                    } else if (chosenAction == 4) {
+                        selectedStation.resumeAudio();
+                    } else if (chosenAction == 0) {
                         break;
                     } else {
                         System.out.println("Ação inválida. Retornando ao menu principal.");
