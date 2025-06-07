@@ -15,7 +15,7 @@ public class ControlClient {
 
             for (int i = 0; i < numStations; i++) {
                 hostnames[i] = args[i];
-                String stationName = "Station " + (i + 1);
+                String stationName = "Station" + (i + 1);
                 stubs[i] = (IStation) Naming.lookup("rmi://" + hostnames[i] + "/" + stationName); // registra o objeto remoto station no registro RMI e retorna sua referência
             }
 
