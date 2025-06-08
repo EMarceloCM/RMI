@@ -49,6 +49,8 @@ public class ControlClient {
                     System.out.println("2. Alterar padrão de som");
                     System.out.println("3. Pausar áudio");
                     System.out.println("4. Retomar áudio");
+                    System.out.println("5. Recuar -5s");
+                    System.out.println("6. Avançar +5s");
                     System.out.println("0. Trocar estação / Sair");
                     System.out.print("\nEscolha uma ação: ");
 
@@ -68,6 +70,10 @@ public class ControlClient {
                         selectedStation.pauseAudio();
                     } else if (chosenAction == 4) {
                         selectedStation.resumeAudio();
+                    } else if (chosenAction == 5) {
+                        selectedStation.skipBackward5s();
+                    } else if (chosenAction == 6) {
+                        selectedStation.skipForward5s();
                     } else if (chosenAction == 0) {
                         break;
                     } else {

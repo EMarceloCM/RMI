@@ -7,4 +7,6 @@ public interface IStation extends Remote {
     void changeSoundPattern(String pattern) throws RemoteException;
     void pauseAudio() throws RemoteException;
     void resumeAudio() throws RemoteException;
+    void skipForward5s() throws RemoteException;
+    void skipBackward5s() throws RemoteException;
 }

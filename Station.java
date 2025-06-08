@@ -126,6 +126,23 @@ public class Station extends UnicastRemoteObject implements IStation {
         toneThread.start();
     }
 
+    @Override
+    public synchronized void skipForward5s() throws RemoteException {
+        if (currentClip == null) return;
+        long pos = currentClip.getMicrosecondPosition();
+        long target = pos + 5_000_000L; // 5 s em microssegundos
+        long max = currentClip.getMicrosecondLength();
+        currentClip.setMicrosecondPosition(Math.min(target, max));
+    }
+
+    @Override
+    public synchronized void skipBackward5s() throws RemoteException {
+        if (currentClip == null) return;
+        long pos = currentClip.getMicrosecondPosition();
+        long target = pos - 5_000_000L;
+        currentClip.setMicrosecondPosition(Math.max(target, 0L));
+    }
+
     private void stopCurrentClipIfPlaying() {
         if (currentClip != null && currentClip.isOpen()) {
             currentClip.stop();
